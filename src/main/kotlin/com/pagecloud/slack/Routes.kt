@@ -8,8 +8,8 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.server.*
 import org.springframework.web.reactive.function.server.RequestPredicates.GET
 import org.springframework.web.reactive.function.server.RequestPredicates.POST
-import org.springframework.web.reactive.function.server.ServerResponse.ok
-import org.springframework.web.reactive.function.server.ServerResponse.status
+import org.springframework.web.reactive.function.server.RouterFunctions.route
+import org.springframework.web.reactive.function.server.ServerResponse.*
 import reactor.core.publisher.Mono
 
 /**
@@ -21,9 +21,9 @@ class Router(val slackPropeties: SlackProperties) : RouterFunction<ServerRespons
     val webClient: WebClient = WebClient.create()
 
     override fun route(request: ServerRequest): Mono<HandlerFunction<ServerResponse>> {
-        return RouterFunctions.route(POST("/notify/{channel}"), notifyChannel())
-            .and(RouterFunctions.route(POST("/notify"), notifyChannel()))
-            .and(RouterFunctions.route(GET("/"), sayHello()))
+        return route(POST("/notify/{channel}"), notifyChannel()).and(
+            route(POST("/notify"), notifyChannel())).and(
+            route(GET("/**"), sayHello()))
             .route(request)
     }
 
@@ -58,7 +58,7 @@ class Router(val slackPropeties: SlackProperties) : RouterFunction<ServerRespons
             } else {
                 status(HttpStatus.FORBIDDEN).build()
             }
-        }
+        }.otherwise { badRequest().build() }
     }
 }
 

@@ -34,9 +34,11 @@ class Router(val slackPropeties: SlackProperties) : RouterFunction<ServerRespons
     fun notifyChannel() = HandlerFunction { req ->
         req.bodyToMono(IncomingMessage::class.java).then { incoming ->
             if (incoming.apiKey == "someApiKey") {
+
+                val channel = req.pathVariables().getOrElse("channel", { "#eng" })
                 val message = SlackMessage(
                     username = incoming.username,
-                    channel = req.pathVariables().getOrElse("channel", { "#eng" }),
+                    channel = if (channel[0] == '#' || channel[0] =='@') channel else "#$channel",
                     text = incoming.text,
                     attachments = listOf(
                         Attachment(

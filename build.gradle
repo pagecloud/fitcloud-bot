@@ -51,3 +51,7 @@ dependencyManagement {
         mavenBom "org.springframework.boot.experimental:spring-boot-dependencies-web-reactive:0.1.0.BUILD-SNAPSHOT"
     }
 }
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '3.3'
+}

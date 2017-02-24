@@ -2,7 +2,7 @@ package com.pagecloud.slack
 
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.boot.autoconfigure.reactiveweb.FunctionalReactiveWebAutoConfiguration
+import org.springframework.boot.autoconfigure.webflux.WebFluxFunctionalAutoConfiguration
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
@@ -14,7 +14,7 @@ import org.springframework.web.server.adapter.WebHttpHandlerBuilder
  * @author Edward Smith
  */
 
-@SpringBootApplication(exclude = arrayOf(FunctionalReactiveWebAutoConfiguration::class))
+@SpringBootApplication(exclude = arrayOf(WebFluxFunctionalAutoConfiguration::class))
 @EnableConfigurationProperties(SlackProperties::class)
 class RouterApplication {
     @Bean

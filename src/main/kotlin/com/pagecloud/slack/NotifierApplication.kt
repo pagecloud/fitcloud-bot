@@ -14,15 +14,9 @@ import org.springframework.web.server.adapter.WebHttpHandlerBuilder
  * @author Edward Smith
  */
 
-@SpringBootApplication(exclude = arrayOf(WebFluxFunctionalAutoConfiguration::class))
+@SpringBootApplication
 @EnableConfigurationProperties(SlackProperties::class)
-class RouterApplication {
-    @Bean
-    fun httpHandler(router: Router): HttpHandler
-        = WebHttpHandlerBuilder
-            .webHandler(RouterFunctions.toHttpHandler(router))
-            .build()
-}
+class RouterApplication
 
 @ConfigurationProperties(prefix = "slack")
 class SlackProperties {

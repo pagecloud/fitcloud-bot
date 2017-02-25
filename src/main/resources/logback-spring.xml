@@ -30,6 +30,9 @@
             <!--<environment>${environment}</environment>-->
         <!--</appender>-->
 
+        <logger name="com.pagecloud.slack" level="TRACE"/>
+        <logger name="me.ramswaroop.jbot" level="TRACE"/>
+
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
             <!--<appender-ref ref="SENTRY"/>-->

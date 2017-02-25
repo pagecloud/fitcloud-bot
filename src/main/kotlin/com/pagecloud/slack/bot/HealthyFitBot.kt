@@ -48,7 +48,10 @@ class HealthyFitBot(slackProperties: SlackProperties) : Bot() {
         reply(session, event, Message("Hey @$healthScheduler! What time is the stretch today?"))
     }
 
-    @Controller(pattern = "(healthify schedule)", next = "confirmTime")
+    @Controller(
+        events = arrayOf(EventType.DIRECT_MENTION, EventType.DIRECT_MESSAGE),
+        pattern = "(schedule)",
+        next = "confirmTime")
     fun rescheduleStretch(session: WebSocketSession, event: Event) = handleMessage(event, {
         reply(session, event, Message("Hey! What time is the stretch today?"))
         if (!isConversationOn(event)) {

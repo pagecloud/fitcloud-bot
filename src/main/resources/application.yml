@@ -1,3 +1,7 @@
-spring:
-  profiles:
-    active: prod
+rtmUrl: https://slack.com/api/rtm.start?token={token}&simple_latest&no_unreads
+slack:
+  health-scheduler: ted
+  health-channel: getfitandhealthy
+#  webhook_url: {your_incoming_webhook_url}
+#  bot_token: {your_bot_token}
+#  slash-command-token: {your_slash_command_token}

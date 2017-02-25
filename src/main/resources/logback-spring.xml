@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- Just use Spring Boot's defaults for Console -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <!-- Local logging configuration - set some custom log levels -->
+    <springProfile name="!prod">
+        <logger name="com.pagecloud.slack" level="TRACE"/>
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <!-- Prod deployed logging configuration -->
+    <springProfile name="prod">
+        <logger name="io.tednology" level="INFO"/>
+
+        <!--<springProperty scope="context" name="dsn" source="sentry.dsn"/>-->
+        <!--<springProperty scope="context" name="environment" source="spring.profiles.active"/>-->
+
+        <!--<appender name="SENTRY" class="com.getsentry.raven.logback.SentryAppender">-->
+            <!--&lt;!&ndash; Only logs WARN, ERROR &ndash;&gt;-->
+            <!--<filter class="ch.qos.logback.classic.filter.ThresholdFilter">-->
+                <!--<level>WARN</level>-->
+            <!--</filter>-->
+            <!--<dsn>${dsn}</dsn>-->
+            <!--<environment>${environment}</environment>-->
+        <!--</appender>-->
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <!--<appender-ref ref="SENTRY"/>-->
+        </root>
+    </springProfile>
+</configuration>

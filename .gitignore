@@ -25,5 +25,7 @@ hs_err_pid*
 .gradle
 .idea
 build/
+out/
 src/main/resources/application-prod.yml
 !/gradle/wrapper/gradle-wrapper.jar
+/src/main/resources/application-default.yml

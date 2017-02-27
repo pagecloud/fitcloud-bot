@@ -4,6 +4,8 @@ This is the repository for a Slack bot powering and organizing the :tednology: *
 
 It is written in [Kotlin](https://kotlin-lang.org) on top of [Spring 5](http://docs.spring.io/spring/docs/5.0.0.BUILD-SNAPSHOT/spring-framework-reference/htmlsingle/) / [Spring Boot 2](http://docs.spring.io/spring-boot/docs/2.0.0.BUILD-SNAPSHOT/reference/htmlsingle/) / [Reactor](https://projectreactor.io/) / [Netty](http://netty.io/). Build and dependency management is provided by [Gradle](https://gradle.org/).
 
+Slack API interaction is handled by the [JBot](https://github.com/ramswaroop/jbot) library.
+
 ### How do I get set up? ###
 You'll need a JDK installed (Oracle or OpenJDK, take your pick). For best results, use [IntelliJ IDEA](https://www.jetbrains.com/idea/download/); simply open the project directory and it should auto-detect everything and set up correctly (just open `NotificationApplication.kt` and right-click + Run/Debug).
 

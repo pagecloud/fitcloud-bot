@@ -5,12 +5,11 @@ import com.pagecloud.http.FormObjectMessageReader
 import org.springframework.boot.WebApplicationType
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.builder.SpringApplicationBuilder
-import org.springframework.boot.context.embedded.reactor.ReactorNettyReactiveWebServerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.scheduling.annotation.EnableScheduling
-import org.springframework.web.reactive.function.client.WebClient
 
 /**
  * @author Edward Smith
@@ -21,8 +20,8 @@ import org.springframework.web.reactive.function.client.WebClient
 @EnableScheduling
 class RouterApplication {
     @Bean
-    fun reactorNettyReactiveWebServerFactory(): ReactorNettyReactiveWebServerFactory
-        = ReactorNettyReactiveWebServerFactory()
+    fun reactorNettyReactiveWebServerFactory(): NettyReactiveWebServerFactory
+        = NettyReactiveWebServerFactory()
 
     @Bean
     fun formObjectMessageReader() = FormObjectMessageReader<Any>()
@@ -32,23 +31,11 @@ class RouterApplication {
 }
 
 fun main(args: Array<String>) {
-    when {
-        // Cheap trick to prevent your free tier dyno from sleeping
-        args.isNotEmpty() && args[0] == "refresh" ->
-            System.getenv("HEROKU_APP_NAME")?.let {
-                val herokuUrl = "https://$it.herokuapp.com"
-                WebClient.create().get().uri(herokuUrl).exchange().then { response ->
-                    response.bodyToMono(String::class.java)
-                        .doOnSuccess(::println)
-                }
-            }
-        else ->
-            SpringApplicationBuilder()
-                .sources(RouterApplication::class.java)
-                .web(WebApplicationType.REACTIVE)
-                .build()
-                .run(*args)
-    }
+    SpringApplicationBuilder()
+        .sources(RouterApplication::class.java)
+        .web(WebApplicationType.REACTIVE)
+        .build()
+        .run(*args)
 }
 
 @ConfigurationProperties(prefix = "slack")

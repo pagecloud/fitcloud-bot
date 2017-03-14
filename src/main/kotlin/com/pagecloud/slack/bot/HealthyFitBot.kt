@@ -41,7 +41,7 @@ class HealthyFitBot(slackProperties: SlackProperties) : Bot() {
     })
 
     // Monday to Friday at 9:30 AM EST, HIT ME!
-    @Scheduled(cron = "0 0/30 9 * * MON-FRI", zone = "EST")
+    @Scheduled(cron = "0 30 9 * * MON-FRI", zone = "America/Toronto")
     fun scheduleStretch() {
         val event = Event().apply { channelId = "@$healthScheduler" }
         startConversation(event, "confirmTime")

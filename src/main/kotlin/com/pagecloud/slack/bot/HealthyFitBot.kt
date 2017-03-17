@@ -1,6 +1,8 @@
 package com.pagecloud.slack.bot
 
+import com.pagecloud.slack.Slack
 import com.pagecloud.slack.SlackProperties
+import com.pagecloud.slack.logger
 import me.ramswaroop.jbot.core.slack.Bot
 import me.ramswaroop.jbot.core.slack.Controller
 import me.ramswaroop.jbot.core.slack.EventType
@@ -9,13 +11,18 @@ import me.ramswaroop.jbot.core.slack.models.Message
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.springframework.web.socket.WebSocketSession
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 import java.util.*
 
 /**
  * @author Edward Smith
  */
 @Component
-class HealthyFitBot(slackProperties: SlackProperties) : Bot() {
+class HealthyFitBot(slackProperties: SlackProperties,
+                    val slack: Slack,
+                    val movementSchedule: MovementSchedule) : Bot() {
 
     val botToken = slackProperties.botToken!!
     val healthScheduler = slackProperties.healthScheduler!!
@@ -41,11 +48,36 @@ class HealthyFitBot(slackProperties: SlackProperties) : Bot() {
     })
 
     // Monday to Friday at 9:30 AM EST, HIT ME!
-    @Scheduled(cron = "0 30 9 * * MON-FRI", zone = "America/Toronto")
+    @Scheduled(cron = "0 14 21 * * MON-FRI", zone = "America/Toronto")
     fun scheduleStretch() {
-        val event = Event().apply { channelId = "@$healthScheduler" }
-        startConversation(event, "confirmTime")
-        reply(session, event, Message("Hey @$healthScheduler! What time is the stretch today?"))
+        log.info("Asking @$healthScheduler for next stretch time")
+        val user = slack.getUser(healthScheduler)
+        user?.let {
+            val event = Event().apply {
+                id = Random().nextInt() + 1
+                channelId = user.id
+            }
+            startConversation(event, "confirmTime")
+            reply(session, event, Message("Hey @$healthScheduler! What time is the stretch today?"))
+        } ?: log.error("No such user $healthScheduler")
+    }
+
+    @Scheduled(cron = "* */15 * * * MON-FRI", zone = "America/Toronto")
+    fun sendReminders() {
+        log.info("Checking whether reminders should be sent")
+        if (movementSchedule.shouldSendReminders()) {
+            log.info("OK! Sending reminder!")
+            movementSchedule.sendReminder { message ->
+                val channel = slack.getChannel(healthChannel)
+                channel?.let {
+                    val event = Event().apply {
+                        id = Random().nextInt() + 1
+                        channelId = channel.id
+                    }
+                    reply(session, event, Message(message))
+                } ?: log.error("No such channel $healthChannel")
+            }
+        }
     }
 
     @Controller(
@@ -63,9 +95,25 @@ class HealthyFitBot(slackProperties: SlackProperties) : Bot() {
 
     @Controller
     fun confirmTime(session: WebSocketSession, event: Event) = handleConversation(event, {
-        reply(session, event, Message("OK, next stretch is set at ${event.text}. I'll send out reminders to #$healthChannel!"))
+        val nextTime = parseNextTime(event.text)
+        val pretty = nextTime.format(PRETTY_FORMAT)
+        reply(session, event, Message("OK, next stretch is set at $pretty. I'll send out reminders to #$healthChannel!"))
+        movementSchedule.scheduleNext(nextTime)
         stopConversation(event)
     })
+
+    private fun parseNextTime(timeInput: String): LocalTime {
+        for (parser in TIME_PARSERS) {
+            try {
+                return LocalTime.parse(timeInput.toUpperCase(), parser)
+            } catch (e: DateTimeParseException) {
+                continue
+            }
+        }
+        val defaultTime = LocalTime.of(11, 30)
+        log.error("Unable to parse $timeInput; defaulting to $defaultTime")
+        return defaultTime
+    }
 
     /**
      * Only executes the Slack message handler function if it isn't a message "from the bot itself"
@@ -83,6 +131,17 @@ class HealthyFitBot(slackProperties: SlackProperties) : Bot() {
 
     }
     companion object {
+        val PRETTY_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("hh:mm a")
+        val TIME_PARSERS = listOf(
+            DateTimeFormatter.ofPattern("hh:mm a", Locale.CANADA),
+            DateTimeFormatter.ofPattern("h:mm a", Locale.CANADA),
+            DateTimeFormatter.ofPattern("hh:mm", Locale.CANADA),
+            DateTimeFormatter.ofPattern("kk:mm", Locale.CANADA),
+            DateTimeFormatter.ofPattern("k:mm", Locale.CANADA),
+            DateTimeFormatter.ISO_LOCAL_TIME,
+            DateTimeFormatter.ISO_TIME,
+            DateTimeFormatter.ISO_OFFSET_TIME
+        )
         val MESSAGE_REPLIES = listOf(
             Message("Are my ears burning?"),
             Message("Did someone call my name?"),
@@ -96,7 +155,9 @@ class HealthyFitBot(slackProperties: SlackProperties) : Bot() {
             Message("What did Jim refactor this time?"),
             Message("Is @mgrouchy making bacon again soon?"),
             Message("Flexibility isn't useful, mobility is."),
+            Message("Your body was designed to move, not sit idle. MOVE!"),
             Message("Your body was designed to move, not sit idle. MOVE!")
         )
+        val log = logger()
     }
 }

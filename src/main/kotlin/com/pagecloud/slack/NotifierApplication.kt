@@ -2,12 +2,14 @@ package com.pagecloud.slack
 
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.pagecloud.http.FormObjectMessageReader
+import com.pagecloud.slack.bot.MovementSchedule
 import org.springframework.boot.WebApplicationType
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory
+import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.Bean
 import org.springframework.scheduling.annotation.EnableScheduling
 
@@ -17,17 +19,19 @@ import org.springframework.scheduling.annotation.EnableScheduling
 
 @SpringBootApplication(scanBasePackages = arrayOf("me.ramswaroop.jbot", "com.pagecloud.slack"))
 @EnableConfigurationProperties(SlackProperties::class)
-@EnableScheduling
+@EnableScheduling @EnableCaching
 class RouterApplication {
     @Bean
-    fun reactorNettyReactiveWebServerFactory(): NettyReactiveWebServerFactory
-        = NettyReactiveWebServerFactory()
+    fun reactorNettyReactiveWebServerFactory() = NettyReactiveWebServerFactory()
 
     @Bean
     fun formObjectMessageReader() = FormObjectMessageReader<Any>()
 
     @Bean
-    fun kotlinModule(): KotlinModule = KotlinModule()
+    fun kotlinModule() = KotlinModule()
+
+    @Bean
+    fun movementSchedule() = MovementSchedule()
 }
 
 fun main(args: Array<String>) {

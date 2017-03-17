@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono
  * @author Edward Smith
  */
 @Component
-class Router(val slackPropeties: SlackProperties) : RouterFunction<ServerResponse> {
+class Router(val slackProperties: SlackProperties) : RouterFunction<ServerResponse> {
 
     val webClient: WebClient = WebClient.create()
 
@@ -48,7 +48,7 @@ class Router(val slackPropeties: SlackProperties) : RouterFunction<ServerRespons
                     )
                 )
                 webClient.post()
-                    .uri(slackPropeties.webhookUrl)
+                    .uri(slackProperties.webhookUrl)
                     .accept(MediaType.APPLICATION_JSON)
                     .contentType(MediaType.APPLICATION_JSON)
                     .exchange(fromObject(message)).then { response ->

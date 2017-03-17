@@ -8,6 +8,7 @@
     <!-- Local logging configuration - set some custom log levels -->
     <springProfile name="!prod">
         <logger name="com.pagecloud.slack" level="TRACE"/>
+        <logger name="me.ramswaroop.jbot" level="TRACE"/>
 
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>

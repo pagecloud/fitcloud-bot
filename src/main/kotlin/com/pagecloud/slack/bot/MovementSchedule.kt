@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicReference
 class MovementSchedule {
     // Because... concurrency!
     private val nextSession: AtomicReference<LocalTime> = AtomicReference(LocalTime.of(11, 30))
-    private val reminder: AtomicReference<Reminder> = AtomicReference(Reminder(LocalTime.of(11, 15)))
+    private val reminder: AtomicReference<Reminder> = AtomicReference(Reminder(LocalTime.of(11, 15), LocalTime.of(11, 30)))
 
     @Scheduled(cron = "0 1 1 * * MON-FRI", zone = "America/Toronto")
     fun resetReminders() {
@@ -27,7 +27,7 @@ class MovementSchedule {
 
     fun scheduleNext(nextTime: LocalTime) {
         nextSession.set(nextTime)
-        reminder.set(Reminder(nextTime.minus(FIRST_REMINDER)))
+        reminder.set(Reminder(nextTime.minus(SECOND_REMINDER), nextTime))
     }
 
     fun shouldSendReminders(): Boolean {
@@ -61,9 +61,10 @@ class MovementSchedule {
 }
 
 data class Reminder(val time: LocalTime,
+                    val moveTime: LocalTime,
                     var firedToday: Boolean = false) {
     fun fire(reminderFunction: (String) -> Unit) {
-        val prettyTime = time.format(PRETTY_FORMAT)
+        val prettyTime = moveTime.format(PRETTY_FORMAT)
         val message = "Hey Healthy and Fit team! Just a reminder that the next stretch will be at $prettyTime!"
         reminderFunction(message)
         firedToday = true

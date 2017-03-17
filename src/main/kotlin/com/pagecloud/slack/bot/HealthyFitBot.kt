@@ -47,24 +47,25 @@ class HealthyFitBot(slackProperties: SlackProperties,
         reply(session, event, msg)
     })
 
-    // Monday to Friday at 9:30 AM EST, HIT ME!
-    @Scheduled(cron = "0 14 21 * * MON-FRI", zone = "America/Toronto")
+    // Monday to Friday at 9:30 AM, find out what time the stretch should be
+    @Scheduled(cron = "0 39 21 * * MON-FRI", zone = "America/Toronto")
     fun scheduleStretch() {
         log.info("Asking @$healthScheduler for next stretch time")
-        val user = slack.getUser(healthScheduler)
-        user?.let {
+        val channel = slack.getChannel(healthChannel)
+        channel?.let {
             val event = Event().apply {
                 id = Random().nextInt() + 1
-                channelId = user.id
+                channelId = channel.id
             }
             startConversation(event, "confirmTime")
             reply(session, event, Message("Hey @$healthScheduler! What time is the stretch today?"))
         } ?: log.error("No such user $healthScheduler")
     }
 
-    @Scheduled(cron = "* */15 * * * MON-FRI", zone = "America/Toronto")
+    // Check every minute, Monday to Friday EST
+    @Scheduled(cron = "* 0-59 * * * MON-FRI", zone = "America/Toronto")
     fun sendReminders() {
-        log.info("Checking whether reminders should be sent")
+        log.trace("Checking whether reminders should be sent...")
         if (movementSchedule.shouldSendReminders()) {
             log.info("OK! Sending reminder!")
             movementSchedule.sendReminder { message ->

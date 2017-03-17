@@ -96,13 +96,13 @@ data class User(val id: String,
                 @JsonProperty("two_factor_type") val twoFactorType: String?)
 
 data class Profile(@JsonProperty("first_name")
-                   val firstName: String,
+                   val firstName: String?,
                    @JsonProperty("last_name")
-                   val lastName: String,
+                   val lastName: String?,
                    @JsonProperty("real_name")
                    val realName: String,
                    val skype: String?,
-                   val email: String,
+                   val email: String?,
                    val phone: String?,
                    val image_24: String,
                    val image_32: String,

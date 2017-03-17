@@ -50,8 +50,8 @@ class MovementSchedule {
         if (!reminder.firedToday) reminder.fire(reminderFunction)
     }
 
+    // TODO add all reminders
     companion object {
-        val WINDOW: Duration = Duration.ofSeconds(60L)
         val FIRST_REMINDER = Duration.ofMinutes(60L)
         val SECOND_REMINDER = Duration.ofMinutes(15L)
         val LAST_REMINDER = Duration.ofMinutes(1L)
@@ -70,9 +70,5 @@ data class Reminder(val time: LocalTime,
         firedToday = true
     }
 }
-
-
-fun LocalTime.isAfter(otherTime: LocalTime, threshold: Duration): Boolean =
-    this.isAfter(otherTime) && Duration.between(this, otherTime) <= threshold
 
 val PRETTY_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("hh:mm a")

@@ -17,7 +17,7 @@
 
     <!-- Prod deployed logging configuration -->
     <springProfile name="prod">
-        <logger name="io.tednology" level="INFO"/>
+        <logger name="com.pagecloud" level="INFO"/>
 
         <!--<springProperty scope="context" name="dsn" source="sentry.dsn"/>-->
         <!--<springProperty scope="context" name="environment" source="spring.profiles.active"/>-->

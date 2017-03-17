@@ -11,6 +11,7 @@ import me.ramswaroop.jbot.core.slack.models.Message
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import org.springframework.web.socket.WebSocketSession
+import java.security.SecureRandom
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
@@ -28,6 +29,8 @@ class HealthyFitBot(slackProperties: SlackProperties,
     val healthScheduler = slackProperties.healthScheduler!!
     val healthChannel = slackProperties.healthChannel!!
     var session: WebSocketSession? = null
+    var lastReply: String = ""
+    val random by lazy { SecureRandom() }
 
     override fun getSlackBot(): Bot {
         return this
@@ -43,9 +46,18 @@ class HealthyFitBot(slackProperties: SlackProperties,
 
     @Controller(events = arrayOf(EventType.DIRECT_MENTION, EventType.DIRECT_MESSAGE))
     fun onDirectMessage(session: WebSocketSession, event: Event) = handleMessage(event, {
-        val msg = MESSAGE_REPLIES[Random().nextInt(MESSAGE_REPLIES.size)]
-        reply(session, event, msg)
+        val message = randomReply(lastReply)
+        lastReply = message.text
+        reply(session, event, message)
     })
+
+    private fun randomReply(lastText: String): Message {
+        val msg = MESSAGE_REPLIES[random.nextInt(MESSAGE_REPLIES.size)]
+        if (msg.text == lastText) {
+            return randomReply(lastText)
+        }
+        return msg
+    }
 
     // Monday to Friday at 9:30 AM, find out what time the stretch should be
     @Scheduled(cron = "0 39 21 * * MON-FRI", zone = "America/Toronto")
@@ -150,10 +162,8 @@ class HealthyFitBot(slackProperties: SlackProperties,
             Message("Hmmmm?"),
             Message("I'm busy working on your health!"),
             Message("Is @guy trolling again?"),
-            Message("What did @jim refactor this time?"),
             Message("Has @teejay's cookie evolved into a subhuman species yet?"),
             Message("@manbunnick should really keep the man bun going."),
-            Message("What did Jim refactor this time?"),
             Message("Is @mgrouchy making bacon again soon?"),
             Message("Flexibility isn't useful, mobility is."),
             Message("Your body was designed to move, not sit idle. MOVE!"),

@@ -17,7 +17,6 @@
 
     <!-- Prod deployed logging configuration -->
     <springProfile name="prod">
-        <logger name="com.pagecloud" level="INFO"/>
 
         <!--<springProperty scope="context" name="dsn" source="sentry.dsn"/>-->
         <!--<springProperty scope="context" name="environment" source="spring.profiles.active"/>-->
@@ -31,7 +30,7 @@
             <!--<environment>${environment}</environment>-->
         <!--</appender>-->
 
-        <logger name="com.pagecloud.slack" level="TRACE"/>
+        <logger name="com.pagecloud.slack" level="INFO"/>
         <logger name="me.ramswaroop.jbot" level="TRACE"/>
 
         <root level="INFO">

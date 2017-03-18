@@ -60,7 +60,7 @@ class HealthyFitBot(slackProperties: SlackProperties,
     }
 
     // Monday to Friday at 9:30 AM, find out what time the stretch should be
-    @Scheduled(cron = "0 39 21 * * MON-FRI", zone = "America/Toronto")
+    @Scheduled(cron = "0 30 9 * * MON-FRI", zone = "America/Toronto")
     fun scheduleStretch() {
         log.info("Asking @$healthScheduler for next stretch time")
         val channel = slack.getChannel(healthChannel)

@@ -3,7 +3,7 @@ package com.pagecloud.slack
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass
-import kotlin.reflect.companionObject
+import kotlin.reflect.full.companionObject
 
 // Return logger for Java class, if companion object fix the name
 public fun <T: Any> logger(forClass: Class<T>): Logger {

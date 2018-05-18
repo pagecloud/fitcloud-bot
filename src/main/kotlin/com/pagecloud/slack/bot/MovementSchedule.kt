@@ -37,10 +37,10 @@ class MovementSchedule {
     fun getRemindersToSend(): List<Reminder> =
         when {
             // We'll just have to wait until next time I guess...
-            now().isAfter(nextSession) -> emptyList<Reminder>()
+            now().isAfter(nextSession) -> emptyList()
             reminder.shouldFire() -> listOf(reminder)
             imminentReminder.shouldFire() -> listOf(imminentReminder)
-            else -> emptyList<Reminder>()
+            else -> emptyList()
         }
 
     companion object {

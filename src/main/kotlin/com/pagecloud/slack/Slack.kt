@@ -33,44 +33,44 @@ class Slack(slackProperties: SlackProperties) {
         return webClient.get()
             .uri("$BASE_URL/users.list?token=$token")
             .accept(MediaType.APPLICATION_JSON)
-            .exchange().then { resp ->
+            .exchange().flatMap { resp ->
                 if (resp.statusCode().is2xxSuccessful) {
-                    resp.bodyToMono(UserListResponse::class.java).then { response ->
+                    resp.bodyToMono(UserListResponse::class.java).flatMap { response ->
                         when {
                             response.ok -> Mono.just(response.users.associateBy(User::name, { it }))
                             else -> {
                                 log.error("Could not fetch Users. Error: ${response.error}; Warning: ${response.warning}")
-                                Mono.just(emptyMap<String, User>())
+                                Mono.just(emptyMap())
                             }
                         }
                     }
                 } else {
                     log.error("Could not fetch Users, HTTP status ${resp.statusCode()}")
-                    Mono.just(emptyMap<String, User>())
+                    Mono.just(emptyMap())
                 }
-            }.block() // Sadness - should be Mono return type but whatever
+            }.block()!! // Sadness - should be Mono return type but whatever
     }
 
     fun fetchChannels(): Map<String, Channel> {
         return webClient.get()
             .uri("$BASE_URL/channels.list?token=$token")
             .accept(MediaType.APPLICATION_JSON)
-            .exchange().then { resp ->
+            .exchange().flatMap { resp ->
             if (resp.statusCode().is2xxSuccessful) {
-                resp.bodyToMono(ChannelListResponse::class.java).then { response ->
+                resp.bodyToMono(ChannelListResponse::class.java).flatMap { response ->
                     when {
                         response.ok -> Mono.just(response.channels.associateBy({ it.name }, { it }))
                         else -> {
                             log.error("Could not fetch Channels. Error: ${response.error}; Warning: ${response.warning}")
-                            Mono.just(emptyMap<String, Channel>())
+                            Mono.just(emptyMap())
                         }
                     }
                 }
             } else {
                 log.error("Could not fetch Users, HTTP status ${resp.statusCode()}")
-                Mono.just(emptyMap<String, Channel>())
+                Mono.just(emptyMap())
             }
-        }.block()
+        }.block()!!
     }
 
     companion object {

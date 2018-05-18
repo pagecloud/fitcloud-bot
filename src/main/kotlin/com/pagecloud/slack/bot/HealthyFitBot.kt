@@ -94,7 +94,7 @@ class HealthyFitBot(slackProperties: SlackProperties,
     }
 
     @Controller(
-        events = arrayOf(EventType.DIRECT_MENTION, EventType.DIRECT_MESSAGE),
+        events = [EventType.DIRECT_MENTION, EventType.DIRECT_MESSAGE],
         pattern = "(schedule)",
         next = "confirmTime")
     fun rescheduleStretch(session: WebSocketSession, event: Event) = handleMessage(event, {

@@ -32,7 +32,7 @@ class Router(val slackProperties: SlackProperties) : RouterFunction<ServerRespon
     }
 
     fun notifyChannel() = HandlerFunction { req ->
-        req.bodyToMono(IncomingMessage::class).then { incoming ->
+        req.bodyToMono<IncomingMessage>().flatMap { incoming ->
             if (incoming.apiKey == "someApiKey") {
 
                 val channel = req.pathVariables().getOrElse("channel", { "#general" })
@@ -48,17 +48,19 @@ class Router(val slackProperties: SlackProperties) : RouterFunction<ServerRespon
                     )
                 )
                 webClient.post()
-                    .uri(slackProperties.webhookUrl)
+                    .uri(slackProperties.webhookUrl!!)
                     .accept(MediaType.APPLICATION_JSON)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .exchange(fromObject(message)).then { response ->
+                    .syncBody(message)
+                    .exchange()
+                    .flatMap { response ->
                         if (response.statusCode().is2xxSuccessful) ok().build()
                         else status(HttpStatus.INTERNAL_SERVER_ERROR).build()
                     }
             } else {
                 status(HttpStatus.FORBIDDEN).build()
             }
-        }.otherwise { badRequest().build() }
+        }.onErrorResume { badRequest().build() }
     }
 }
 

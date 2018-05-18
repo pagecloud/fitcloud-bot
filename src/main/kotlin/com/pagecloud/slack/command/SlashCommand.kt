@@ -36,7 +36,7 @@ class SlackSlashCommandHandler(slackProperties: SlackProperties,
     }
 
     fun handleCommand() = HandlerFunction { req ->
-        req.bodyToMono(SlashCommandData::class).then { command ->
+        req.bodyToMono<SlashCommandData>().flatMap { command ->
             if (command.token != slashCommandToken) {
                 ok().body(RichMessage("Sorry! You're not lucky enough to use our slack command."))
             } else {

@@ -78,9 +78,9 @@ class HealthyFitBot(slackProperties: SlackProperties,
     @Scheduled(cron = "* 0-59 * * * MON-FRI", zone = "America/Toronto")
     fun sendReminders() {
         log.trace("Checking whether reminders should be sent...")
-        if (movementSchedule.shouldSendReminders()) {
-            log.info("OK! Sending reminder!")
-            movementSchedule.sendReminder { message ->
+        movementSchedule.getRemindersToSend().forEach { reminder ->
+            log.info("OK! Sending $reminder!")
+            reminder.fire { message ->
                 val channel = slack.getChannel(healthChannel)
                 channel?.let {
                     val event = Event().apply {

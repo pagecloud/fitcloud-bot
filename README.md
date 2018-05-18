@@ -2,7 +2,7 @@
 
 This is the repository for a Slack bot powering and organizing the :tednology: *Stretch-a-Day™ Program for Optimal :pc: Health, Well-being and Performance*
 
-It is written in [Kotlin](https://kotlin-lang.org) on top of [Spring 5](http://docs.spring.io/spring/docs/5.0.0.BUILD-SNAPSHOT/spring-framework-reference/htmlsingle/) / [Spring Boot 2](http://docs.spring.io/spring-boot/docs/2.0.0.BUILD-SNAPSHOT/reference/htmlsingle/) / [Reactor](https://projectreactor.io/) / [Netty](http://netty.io/). Build and dependency management is provided by [Gradle](https://gradle.org/).
+It is written in [Kotlin](https://kotlin-lang.org) on top of [Spring 5](https://docs.spring.io/spring/docs/5.0.6.RELEASE/spring-framework-reference/) / [Spring Boot 2](https://docs.spring.io/spring-boot/docs/2.0.2.RELEASE/reference/htmlsingle/) / [Reactor](https://projectreactor.io/) / [Netty](http://netty.io/). Build and dependency management is provided by [Gradle](https://gradle.org/).
 
 Slack API interaction is handled by the [JBot](https://github.com/ramswaroop/jbot) library.
 

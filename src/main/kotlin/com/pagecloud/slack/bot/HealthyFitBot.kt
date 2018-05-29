@@ -2,16 +2,18 @@ package com.pagecloud.slack.bot
 
 import com.pagecloud.slack.Slack
 import com.pagecloud.slack.SlackProperties
+import com.pagecloud.slack.isHoliday
 import com.pagecloud.slack.logger
+import me.ramswaroop.jbot.core.common.JBot
 import me.ramswaroop.jbot.core.slack.Bot
-import me.ramswaroop.jbot.core.slack.Controller
-import me.ramswaroop.jbot.core.slack.EventType
+import me.ramswaroop.jbot.core.common.EventType
+import me.ramswaroop.jbot.core.common.Controller;
 import me.ramswaroop.jbot.core.slack.models.Event
 import me.ramswaroop.jbot.core.slack.models.Message
 import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
 import org.springframework.web.socket.WebSocketSession
 import java.security.SecureRandom
+import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
@@ -20,7 +22,7 @@ import java.util.*
 /**
  * @author Edward Smith
  */
-@Component
+@JBot
 class HealthyFitBot(slackProperties: SlackProperties,
                     val slack: Slack,
                     val movementSchedule: MovementSchedule) : Bot() {
@@ -29,49 +31,71 @@ class HealthyFitBot(slackProperties: SlackProperties,
     val healthScheduler = slackProperties.healthScheduler!!
     val healthChannel = slackProperties.healthChannel!!
     var session: WebSocketSession? = null
-    var lastReply: String = ""
+    var lastIndex: Int = -1
+    var paused: Boolean = false
     val random by lazy { SecureRandom() }
 
-    override fun getSlackBot(): Bot {
-        return this
-    }
+    override fun getSlackBot() = this
 
-    override fun getSlackToken(): String {
-        return botToken
-    }
+    override fun getSlackToken() = botToken
 
     override fun afterConnectionEstablished(session: WebSocketSession) {
         this.session = session
     }
 
-    @Controller(events = arrayOf(EventType.DIRECT_MENTION, EventType.DIRECT_MESSAGE))
+    @Controller(events = [EventType.DIRECT_MENTION, EventType.DIRECT_MESSAGE])
     fun onDirectMessage(session: WebSocketSession, event: Event) = handleMessage(event, {
-        val message = randomReply(lastReply)
-        lastReply = message.text
-        reply(session, event, message)
+        if (event.text.endsWith("pause") || event.text.endsWith("unpause")) {
+            val unpause = event.text.endsWith("unpause")
+            val msg = if (unpause)
+                "*start* asking you about the next stretch time again."
+            else
+                "_stop_ asking you about the next stretch time for now."
+            paused = !unpause
+            reply(session, event, Message("OK, I'll $msg"))
+        } else if (event.text.endsWith("cancel")) {
+            movementSchedule.scheduleNext(OFF)
+            reply(session, event, Message("OK! I've *cancelled the stretch* for now."))
+        } else {
+            val message = randomReply()
+            reply(session, event, message)
+        }
     })
 
-    private fun randomReply(lastText: String): Message {
-        val msg = MESSAGE_REPLIES[random.nextInt(MESSAGE_REPLIES.size)]
-        if (msg.text == lastText) {
-            return randomReply(lastText)
+    private fun randomReply(): Message {
+        var index = random.nextInt(MESSAGE_REPLIES.size)
+        if (lastIndex == index) {
+            index = random.nextInt(MESSAGE_REPLIES.size)
         }
-        return msg
+        val msg = MESSAGE_REPLIES[index]
+        if ("<@" in msg) {
+            return ProperMessage(msg.replace(userTagPattern, { matchResult ->
+                val username = matchResult.groups["username"]!!.value
+                slack.getUser(username)?.let { user ->
+                    "<@${user.id}|$username>"
+                } ?: matchResult.value
+            }))
+        }
+        return ProperMessage(msg)
     }
 
     // Monday to Friday at 9:30 AM, find out what time the stretch should be
     @Scheduled(cron = "0 30 9 * * MON-FRI", zone = "America/Toronto")
     fun scheduleStretch() {
         log.info("Asking @$healthScheduler for next stretch time")
-        val channel = slack.getChannel(healthChannel)
-        channel?.let {
-            val event = Event().apply {
-                id = Random().nextInt() + 1
-                channelId = channel.id
-            }
-            startConversation(event, "confirmTime")
-            reply(session, event, Message("Hey @$healthScheduler! What time is the stretch today?"))
-        } ?: log.error("No such user $healthScheduler")
+        if (!isHoliday(LocalDate.now())) {
+            val channel = slack.getChannel(healthChannel)
+            channel?.let {
+                val event = Event().apply {
+                    id = Random().nextInt() + 1
+                    channelId = channel.id
+                }
+                startConversation(event, "confirmTime")
+                reply(session, event, Message("Hey @$healthScheduler! What time is the stretch today?"))
+            } ?: log.error("No such user $healthScheduler")
+        } else {
+            log.info("It's a holiday! No stretching today.")
+        }
     }
 
     // Check every minute, Monday to Friday EST
@@ -109,13 +133,18 @@ class HealthyFitBot(slackProperties: SlackProperties,
     @Controller
     fun confirmTime(session: WebSocketSession, event: Event) = handleConversation(event, {
         val nextTime = parseNextTime(event.text)
-        val pretty = nextTime.format(PRETTY_FORMAT)
-        reply(session, event, Message("OK, next stretch is set at $pretty. I'll send out reminders to #$healthChannel!"))
+        val pretty =
+            if (OFF == nextTime) "stretch is off for now."
+            else "next stretch is set at ${nextTime.format(PRETTY_FORMAT)}. I'll send out reminders to #$healthChannel!"
+
+        reply(session, event, Message("OK, $pretty"))
         movementSchedule.scheduleNext(nextTime)
         stopConversation(event)
     })
 
     private fun parseNextTime(timeInput: String): LocalTime {
+        if ("off".equals(timeInput, ignoreCase = true)) return OFF
+
         for (parser in TIME_PARSERS) {
             try {
                 return LocalTime.parse(timeInput.toUpperCase(), parser)
@@ -143,6 +172,7 @@ class HealthyFitBot(slackProperties: SlackProperties,
         }
 
     }
+
     companion object {
         val PRETTY_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("hh:mm a")
         val TIME_PARSERS = listOf(
@@ -156,19 +186,19 @@ class HealthyFitBot(slackProperties: SlackProperties,
             DateTimeFormatter.ISO_OFFSET_TIME
         )
         val MESSAGE_REPLIES = listOf(
-            Message("Are my ears burning?"),
-            Message("Did someone call my name?"),
-            Message("What did you say?"),
-            Message("Hmmmm?"),
-            Message("I'm busy working on your health!"),
-            Message("Is @guy trolling again?"),
-            Message("Has @teejay's cookie evolved into a subhuman species yet?"),
-            Message("@manbunnick should really keep the man bun going."),
-            Message("Is @mgrouchy making bacon again soon?"),
-            Message("Flexibility isn't useful, mobility is."),
-            Message("Your body was designed to move, not sit idle. MOVE!"),
-            Message("Your body was designed to move, not sit idle. MOVE!")
+            "<@tednology> wrote a mean Bot, didn't he?",
+            "Are my ears burning?",
+            "Did someone call my name?",
+            "What did you say?",
+            "Hmmmm?",
+            "I'm busy working on your health!",
+            "Has <@teejay>'s cookie evolved into a subhuman species yet?",
+            "<@justnick> should turn that mop into a top-knot.",
+            "Is <@mgrouchy> making bacon again soon?",
+            "Flexibility isn't useful, mobility is.",
+            "Your body was designed to move, not sit idle. MOVE!"
         )
         val log = logger()
+        val userTagPattern = "<@(?<username>[\\w-]+)>".toRegex()
     }
 }

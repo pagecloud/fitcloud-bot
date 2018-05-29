@@ -42,13 +42,13 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter-webflux')
     compile("com.fasterxml.jackson.module:jackson-module-kotlin")
 
-    compile("me.ramswaroop.jbot:jbot:3.0.2")
+    compile("me.ramswaroop.jbot:jbot:4.0.1")
     // TODO When JBot runs using the reactive WebSocketClient we will not have to side-load tomcat for servlet API/websocket impl.
 //    compile("me.ramswaroop.jbot:jbot:3.0.2") {
 //        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
 //    }
 
-    compile("org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}")
+    compile("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
     compile("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
 
     testCompile('org.springframework.boot:spring-boot-starter-test')

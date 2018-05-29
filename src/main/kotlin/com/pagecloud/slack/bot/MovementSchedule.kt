@@ -12,14 +12,19 @@ import java.util.concurrent.atomic.AtomicReference
 /**
  * @author Edward Smith
  */
+
+val OFF = LocalTime.of(0, 0, 0, 0)
+
+
 @Service
 class MovementSchedule {
-    private var nextSession: LocalTime = LocalTime.of(11, 30)
+    private var nextSession: LocalTime = OFF
     private var reminder: Reminder = Reminder(LocalTime.of(11, 15), LocalTime.of(11, 30))
     private var imminentReminder: Reminder = Reminder(
         LocalTime.of(11, 30),
         LocalTime.of(11, 30),
-        messageTemplate=IMMINENT_MESSAGE)
+        messageTemplate=IMMINENT_MESSAGE
+    )
 
     @Scheduled(cron = "0 1 1 * * MON-FRI", zone = "America/Toronto")
     fun resetReminders() {
@@ -34,10 +39,12 @@ class MovementSchedule {
         imminentReminder = Reminder(nextTime, nextTime)
     }
 
+    fun notScheduled() = nextSession == OFF
+
     fun getRemindersToSend(): List<Reminder> =
         when {
             // We'll just have to wait until next time I guess...
-            now().isAfter(nextSession) -> emptyList()
+            now().isAfter(nextSession) || notScheduled() -> emptyList()
             reminder.shouldFire() -> listOf(reminder)
             imminentReminder.shouldFire() -> listOf(imminentReminder)
             else -> emptyList()

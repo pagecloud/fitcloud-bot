@@ -20,7 +20,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
 @SpringBootApplication(scanBasePackages = ["me.ramswaroop.jbot", "com.pagecloud.slack"])
 @EnableConfigurationProperties(SlackProperties::class)
 @EnableScheduling @EnableCaching
-class RouterApplication {
+class SlackApplication {
     @Bean
     fun reactorNettyReactiveWebServerFactory() = NettyReactiveWebServerFactory()
 
@@ -36,7 +36,7 @@ class RouterApplication {
 
 fun main(args: Array<String>) {
     SpringApplicationBuilder()
-        .sources(RouterApplication::class.java)
+        .sources(SlackApplication::class.java)
         .web(WebApplicationType.REACTIVE)
         .build()
         .run(*args)

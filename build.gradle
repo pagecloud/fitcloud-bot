@@ -44,6 +44,7 @@ dependencies {
     compile("com.fasterxml.jackson.module:jackson-module-kotlin")
 
     // Autoconfigure Heroku Redis URL
+    compile("org.springframework.cloud:spring-cloud-spring-service-connector")
     compile("org.springframework.cloud:spring-cloud-heroku-connector")
 
     // Autoconfigure a Redis connection pool

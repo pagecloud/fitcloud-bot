@@ -1,6 +1,7 @@
 package com.pagecloud.slack.bot
 
 import com.pagecloud.slack.logger
+import org.springframework.data.redis.core.ReactiveRedisTemplate
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.Duration
@@ -17,7 +18,8 @@ val OFF = LocalTime.of(0, 0, 0, 0)
 
 
 @Service
-class MovementSchedule {
+class MovementSchedule(val redisTemplate: ReactiveRedisTemplate<String, String>) {
+    // TODO: delegate nextSession, reminder values to Redis
     private var nextSession: LocalTime = OFF
     private var reminder: Reminder = Reminder(LocalTime.of(11, 15), LocalTime.of(11, 30))
     private var imminentReminder: Reminder = Reminder(

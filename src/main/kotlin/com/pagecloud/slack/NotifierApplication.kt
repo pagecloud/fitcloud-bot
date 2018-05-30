@@ -10,6 +10,9 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.Bean
+import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory
+import org.springframework.data.redis.core.ReactiveRedisTemplate
+import org.springframework.data.redis.serializer.RedisSerializationContext
 import org.springframework.http.codec.FormHttpMessageReader
 import org.springframework.scheduling.annotation.EnableScheduling
 
@@ -31,7 +34,12 @@ class SlackApplication {
     fun kotlinModule() = KotlinModule()
 
     @Bean
-    fun movementSchedule() = MovementSchedule()
+    fun movementSchedule(connectionFactory: ReactiveRedisConnectionFactory) =
+        MovementSchedule(reactiveRedisTemplate(connectionFactory))
+
+    @Bean
+    fun reactiveRedisTemplate(connectionFactory: ReactiveRedisConnectionFactory) =
+        ReactiveRedisTemplate<String, String>(connectionFactory, RedisSerializationContext.string())
 }
 
 fun main(args: Array<String>) {

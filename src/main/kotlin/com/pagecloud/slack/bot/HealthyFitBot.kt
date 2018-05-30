@@ -10,6 +10,7 @@ import me.ramswaroop.jbot.core.common.EventType
 import me.ramswaroop.jbot.core.common.Controller;
 import me.ramswaroop.jbot.core.slack.models.Event
 import me.ramswaroop.jbot.core.slack.models.Message
+import org.springframework.data.redis.core.ReactiveRedisTemplate
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.web.socket.WebSocketSession
 import java.security.SecureRandom
@@ -25,23 +26,23 @@ import java.util.*
 @JBot
 class HealthyFitBot(slackProperties: SlackProperties,
                     val slack: Slack,
-                    val movementSchedule: MovementSchedule) : Bot() {
+                    val movementSchedule: MovementSchedule,
+                    val redisTemplate: ReactiveRedisTemplate<String, String>) : Bot() {
 
     val botToken = slackProperties.botToken!!
     val healthScheduler = slackProperties.healthScheduler!!
     val healthChannel = slackProperties.healthChannel!!
-    var session: WebSocketSession? = null
+    lateinit var session: WebSocketSession
+
     var lastIndex: Int = -1
-    var paused: Boolean = false
     val random by lazy { SecureRandom() }
 
-    override fun getSlackBot() = this
-
-    override fun getSlackToken() = botToken
-
-    override fun afterConnectionEstablished(session: WebSocketSession) {
-        this.session = session
-    }
+    // Delegate the paused property to a Redis key to persist across restarts
+    var paused: Boolean
+        get() = "true".equals(redisTemplate.opsForValue().get("paused").block(), ignoreCase = true)
+        set(it) {
+            redisTemplate.opsForValue().set("paused", "$it").subscribe()
+        }
 
     @Controller(events = [EventType.DIRECT_MENTION, EventType.DIRECT_MESSAGE])
     fun onDirectMessage(session: WebSocketSession, event: Event) = handleMessage(event, {
@@ -83,6 +84,8 @@ class HealthyFitBot(slackProperties: SlackProperties,
     @Scheduled(cron = "0 30 9 * * MON-FRI", zone = "America/Toronto")
     fun scheduleStretch() {
         log.info("Asking @$healthScheduler for next stretch time")
+        if (paused) return
+
         if (!isHoliday(LocalDate.now())) {
             val channel = slack.getChannel(healthChannel)
             channel?.let {
@@ -201,4 +204,8 @@ class HealthyFitBot(slackProperties: SlackProperties,
         val log = logger()
         val userTagPattern = "<@(?<username>[\\w-]+)>".toRegex()
     }
+
+    override fun getSlackBot() = this
+    override fun getSlackToken() = botToken
+    override fun afterConnectionEstablished(session: WebSocketSession) { this.session = session }
 }

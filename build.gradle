@@ -40,7 +40,14 @@ repositories {
 
 dependencies {
     compile('org.springframework.boot:spring-boot-starter-webflux')
+    compile('org.springframework.boot:spring-boot-starter-data-redis-reactive')
     compile("com.fasterxml.jackson.module:jackson-module-kotlin")
+
+    // Autoconfigure Heroku Redis URL
+    compile("org.springframework.cloud:spring-cloud-heroku-connector")
+
+    // Autoconfigure a Redis connection pool
+    compile("org.apache.commons:commons-pool2")
 
     compile("me.ramswaroop.jbot:jbot:4.0.1")
     // TODO When JBot runs using the reactive WebSocketClient we will not have to side-load tomcat for servlet API/websocket impl.
